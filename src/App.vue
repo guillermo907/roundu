@@ -1,15 +1,51 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <Navbar />
+  <router-view></router-view>
+  <div v-if='locationReady'>
+    <LocationCard :adress='address'/>
+  </div>
+  <div v-else>
+    Cargando latitud ...
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Navbar from './components/Navbar';
+import LocationCard from './components/LocationCard';
+
+import Axios from 'axios';
 
 export default {
   name: 'App',
+  data(){
+    return {
+      location: {},
+      address: {}
+    }
+  },
+  computed:{
+    locationReady (){
+      return this.location.latitude ? true : false;
+    }
+  },
   components: {
-    HelloWorld
+    Navbar,
+    LocationCard
+  },
+  created(){
+    navigator.geolocation.watchPosition(result =>{
+      this.location = result.coords;
+      this.getAdress();
+    }, console.log('error de geolocalizacion'));
+  },
+  methods: {
+    getAdress(){
+      Axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.location.latitude}&lon=${this.location.longitude}&zoom=18&addressdetails=1`)
+      .then(res => {
+              console.log(res.data);
+              this.address = res.data.address;
+            })
+    }
   }
 }
 </script>
@@ -21,6 +57,9 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 20px;
+}
+p{
+  text-align: left;
 }
 </style>
